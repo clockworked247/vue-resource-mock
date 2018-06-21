@@ -35,7 +35,7 @@ if (devMode) { // don't use it on your production build
 export default {
 
   // basic mock
-  ['GET */path/to/resource'] (pathMatch, query, request) {
+  ['GET */path/to/resource'] (pathMatch, query, request, pass) {
     // before respond, you can check the path and query parameters with `pathMatch` & `query`
     // powered by 'url-pattern' & 'qs'
     // https://www.npmjs.com/package/url-pattern
@@ -53,7 +53,19 @@ export default {
   // shorthand mock
   ['PUT */path/to/resource']: 200, // respond with only status code
 
-  ['POST */path/to/resource']: { /*whatever*/ } // respond with only body, status code = 200
+  ['POST */path/to/resource']: { /*whatever*/ }, // respond with only body, status code = 200
+
+  // example pass-through: if the query string variable 'mock=true' set, return mock, otherwise pass-through
+  ['GET */path/to/resource'] (pathMatch, query, request, pass) {
+    let runMock = (request.params && request.params.mock === 'true');
+    let body = { /* whatever */ }
+    return (runMock) ? {
+        body: body,
+        status: 200,
+        statusText: 'OK',
+        headers: { /*headers*/ }
+      } : pass;
+  }
 
 }
 

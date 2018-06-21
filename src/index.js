@@ -67,6 +67,7 @@ const MockMiddleware = (routes, { silent }) => {
 
   return (request, next) => {
     let [path, query] = request.url.split('?')
+    let pass = Symbol('pass-through')
     let route = Routes.filter((item) => {
       item.matchResult = item.pattern.match(path)
       return request.method.toLowerCase() === item.method.toLowerCase() && !!item.matchResult
@@ -75,16 +76,16 @@ const MockMiddleware = (routes, { silent }) => {
       silent || console.warn(TAG + 'Request pass through: ' + request.url)
       next()
     } else {
-      silent || console.info(TAG + 'Request served with mock: ' + request.url)
-      let mockResponse = route[0].handler(route[0].matchResult, qs.parse(query), request)
-      if (mockResponse) {
+      let mockResponse = route[0].handler(route[0].matchResult, qs.parse(query), request, pass)
+      if (mockResponse !== pass) {
+        silent || console.info(TAG + 'Request served with mock: ' + request.url)
         if (mockResponse.delay) {
           setTimeout(() => next(request.respondWith(mockResponse.body, mockResponse)), mockResponse.delay)
         } else {
           next(request.respondWith(mockResponse.body, mockResponse))
         }
       } else {
-        silent || console.warn(TAG + 'Request pass through: ' + request.url)
+        silent || console.warn(TAG + 'Request pass-through: ' + request.url)
         next()
       }
     }
